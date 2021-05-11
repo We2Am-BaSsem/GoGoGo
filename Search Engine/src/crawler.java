@@ -48,6 +48,7 @@ public class crawler {
 
         }
     }
+    
     private static void writeToFile(String url, String text) {
         try {
             url = set_up_url(url);

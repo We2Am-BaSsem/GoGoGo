@@ -1,7 +1,11 @@
+
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
+
+import ca.rmen.porterstemmer.PorterStemmer;
 
 public class Indexer {
     static HashMap<String, Long> keyWords = new HashMap<String, Long>();
@@ -12,8 +16,7 @@ public class Indexer {
             Index("googlecomassistan");
             System.out.println(indexer);
         } catch (Exception e) {
-            // TODO: handle exception
-            System.out.println("error in indexing");
+            System.out.println("error in indexing1");
         }
     }
 
@@ -23,7 +26,8 @@ public class Indexer {
             while (In.hasNext()) {
 
                 String word = In.next();
-                word.toLowerCase();
+                PorterStemmer ps = new PorterStemmer();
+                word = ps.stemWord(word);
                 //System.out.println(word);
                 if (keyWords.containsKey(word)) {
                     keyWords.put(word, keyWords.get(word) + 1);
@@ -41,12 +45,29 @@ public class Indexer {
                     indexer.put(word, temp);
                 }
 
-
+                writeToFile(indexer);
             }
             In.close();
         } catch (Exception e) {
-            // TODO: handle exception
+            System.out.println("error in indexing2");
         }
     }
+
+    private static void writeToFile(HashMap<String, ArrayList<String>> indexer) {
+        try {
+            PrintWriter out = new PrintWriter("index\\index.txt");
+            for (String keyWord : indexer.keySet()) {
+                //System.out.println(i);
+                out.write(keyWord+':');
+                for (int i = 0; i < indexer.get(keyWord).size(); i++) {
+                    out.write(indexer.get(keyWord).get(i)+ " ");
+                }
+                out.write('\n');
+              }
+            out.close();
+        } catch (Exception ex) {
+            System.out.println(ex);
+        }
+    }    
 
 }

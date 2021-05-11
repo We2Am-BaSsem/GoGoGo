@@ -1,6 +1,10 @@
 {
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "Libraries/jsoup-1.13.1.jar"
+        "Libraries/jsoup-1.13.1.jar",
+        "Libraries/porter-stemmer-1.0.0.jar"
+    ],
+    "java.project.sourcePaths": [
+        "src"
     ]
 }
