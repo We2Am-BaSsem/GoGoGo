@@ -9,15 +9,15 @@ import org.jsoup.nodes.Element;
 
 import java.io.FileWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
 
 public class crawler {
+        ArrayList <String> URLS = new ArrayList<>();
+        ArrayList <String> fileNames = new ArrayList<>();
+
         public static void main(String[] args) throws Exception {
         String url = "https://developers.google.com/community/dsc-solution-challenge";
         ArrayList<String> visited = new ArrayList<>();
@@ -43,20 +43,20 @@ public class crawler {
                 }
             }
         } catch (Exception e) {
-            //TODO: handle exception
             System.out.println("error here2");
-
         }
     }
     
-    private static void writeToFile(String url, String text) {
+    private static String writeToFile(String url, String text) {
         try {
             url = set_up_url(url);
             PrintWriter out = new PrintWriter("docs\\"+url + ".txt");
             out.write(text);
             out.close();
+            return url;
         } catch (Exception ex) {
             System.out.println(ex);
+            return null;
         }
     }
 
@@ -65,10 +65,15 @@ public class crawler {
             Connection con = Jsoup.connect(url);
             Document doc = con.get();
             if (con.response().statusCode() == 200 ){
-                System.out.println("Link: "+url);
+                //System.out.println("Link: "+url);
                 //System.out.println("title: "+doc.title());
                 v.add(url);
-                writeToFile(url, doc.text());
+                String fileName = writeToFile(url, doc.text());
+                CrawlerDataBase crawlerDataBase = new CrawlerDataBase();
+                Integer result = crawlerDataBase.insertIntoCrawler(url,fileName);
+                if(result == 0){
+                    System.out.println("Iserted <"+ url + "> successfully");
+                }
                 return doc;
             }
             return null;
