@@ -43,7 +43,7 @@ public class crawler {
                 }
             }
         } catch (Exception e) {
-            System.out.println("error here2");
+            System.out.println(e.getMessage());
         }
     }
     
@@ -55,7 +55,7 @@ public class crawler {
             out.close();
             return url;
         } catch (Exception ex) {
-            System.out.println(ex);
+            System.out.println(ex.getMessage());
             return null;
         }
     }
@@ -72,13 +72,13 @@ public class crawler {
                 CrawlerDataBase crawlerDataBase = new CrawlerDataBase();
                 Integer result = crawlerDataBase.insertIntoCrawler(url,fileName);
                 if(result == 0){
-                    System.out.println("Iserted <"+ url + "> successfully");
+                    System.out.println("Inserted <"+ url + "> successfully");
                 }
                 return doc;
             }
             return null;
         } catch (IOException e) {
-            System.out.println("error here1");
+            System.out.println(e.getMessage());
             return null;
         }
     }
