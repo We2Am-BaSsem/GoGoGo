@@ -5,6 +5,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Scanner;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoCursor;
+
+import org.bson.Document;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 
@@ -16,7 +23,21 @@ public class Indexer {
     public static void main(String[] args) throws Exception {
         try {
             fillStopWords();
-            Index("googlecomassistan");
+            String connectionString = "mongodb+srv://SearchEngine:SearchEngine123456@crawler.sajqt.mongodb.net/admin";
+            MongoClientURI clientURI = new MongoClientURI(connectionString);
+            MongoClient mongoClient = new MongoClient(clientURI);
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+            
+            MongoCursor<Document> cursor = collection.find().iterator();
+            while (cursor.hasNext())
+            {
+                Document Item = cursor.next();
+                System.out.println(Item.get("URL").toString());
+                System.out.println("\""+ Item.get("filename").toString()+"\"");
+                //Index(Item.get("filename").toString(), Item.get("URL").toString());
+                Index("googlecomassistan", "https://developers.google.com/assistant");
+            }
             // System.out.println(indexer);
         } catch (Exception e) {
             System.out.println("error in indexing1");
@@ -34,12 +55,13 @@ public class Indexer {
         }
     }
 
-    private static void Index(String url) {
+    private static void Index(String filename, String url) {
         try {
-            Scanner In = new Scanner(new File("docs\\" + url + ".txt"));
+            Scanner In = new Scanner(new File("docs\\" + filename + ".txt"));
             while (In.hasNext()) {
 
                 String preWord = In.next();
+                preWord.toLowerCase();
 
                 String word = specialCharStemmer(preWord);
 
