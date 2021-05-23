@@ -14,9 +14,13 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 
+import com.mongodb.internal.connection.Time;
+
 public class crawler {
     ArrayList<String> URLS = new ArrayList<>();
     ArrayList<String> fileNames = new ArrayList<>();
+    static MongoDBManager dbManager = new MongoDBManager();
+
 
     public static void main(String[] args) throws Exception {
         String url = "https://developers.google.com/community/dsc-solution-challenge";
@@ -38,7 +42,7 @@ public class crawler {
 
                         String next_link = link.attr("href");
                         // next_link = processLink(next_link, url);
-                        if (visited.contains(next_link) == false) {
+                        if (visited.contains(next_link) == false && next_link.startsWith("https://")) {
                             crawl(level++, next_link, visited);
                         }
                     }
@@ -70,12 +74,14 @@ public class crawler {
                 // System.out.println("Link: "+url);
                 // System.out.println("title: "+doc.title());
                 v.add(url);
-                String fileName = writeToFile(url, doc.text());
-
+                //String fileName = writeToFile(url, doc.text());
 
                 String HTML_Document = doc.toString();
-                MongoDBManager dbManager = new MongoDBManager();
-                Integer result = dbManager.insertIntoCrawler(url, fileName, doc.title(), HTML_Document);
+                long start = System.currentTimeMillis();
+                String description = doc.select("meta[name=description]").get(0).attr("content");
+                Integer result = dbManager.insertIntoCrawler(url, doc.title(), HTML_Document,description);
+                long end = System.currentTimeMillis();
+                System.out.println("inserting time :"+ (end-start)/1000 + "s");
                 if (result == 0) {
                     System.out.println("Inserted <" + url + "> successfully");
                 }
