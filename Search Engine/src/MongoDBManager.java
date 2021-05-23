@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -20,7 +21,7 @@ public class MongoDBManager {
     // public static void main(String[] args) {
     // try {
     // MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
-    // MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+    // MongoCollection collection = mongoDatabase.getCollection("Inexer");
     // Document document = new Document();
     // collection.deleteMany(document);
     // } catch (Exception e) {
@@ -28,7 +29,7 @@ public class MongoDBManager {
     // }
     // }
 
-    int insertIntoCrawler(String URL, String fileName, String title, String HTML_doc) {
+    int insertIntoCrawler(String URL, String title, String HTML_doc, String description) {
         try {
             // we access to the collection that should store the crawled pages data
             MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
@@ -36,9 +37,9 @@ public class MongoDBManager {
 
             // we prepare the document that should be inserted
             Document document = new Document("URL", URL);
-            document.append("filename", fileName);
             document.append("title", title);
             document.append("HTML_Document", HTML_doc);
+            document.append("Description", description);
 
             collection.insertOne(document);
 
@@ -62,7 +63,11 @@ public class MongoDBManager {
                 document.append("URLs", indexer.get(key));
                 // }
                 // documents.add(document);
-                collection.insertOne(document);
+                try {
+                    collection.insertOne(document);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
             }
 
             // collection.insertMany(documents);
@@ -74,12 +79,16 @@ public class MongoDBManager {
 
     }
 
-    MongoCursor<Document> retrieveFromCrawler() {
-        MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
-        MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
-
-        return collection.find().iterator();
-
+    FindIterable<Document> retrieveFromCrawler() {
+        try {
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+             
+            return collection.find();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
     void CloseConnection() {

@@ -77,6 +77,7 @@ public class crawler {
                 //String fileName = writeToFile(url, doc.text());
 
                 String HTML_Document = doc.toString();
+
                 long start = System.currentTimeMillis();
                 String description = doc.select("meta[name=description]").get(0).attr("content");
                 Integer result = dbManager.insertIntoCrawler(url, doc.title(), HTML_Document,description);
