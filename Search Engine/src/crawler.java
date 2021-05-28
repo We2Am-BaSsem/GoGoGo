@@ -13,44 +13,117 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import org.jsoup.select.Elements;
+//import com.mongodb.internal.connection.Time;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URL;
 
+import java.util.*;
 import com.mongodb.internal.connection.Time;
 
-public class crawler {
-    ArrayList<String> URLS = new ArrayList<>();
-    ArrayList<String> fileNames = new ArrayList<>();
+public class crawler implements Runnable {
+    private String start_url;
+    public HashSet<String> pages_to_visit;
+    public HashSet<String> visited_pages;
+
     static MongoDBManager dbManager = new MongoDBManager();
-
-
-    public static void main(String[] args) throws Exception {
-        String url = "https://developers.google.com/community/dsc-solution-challenge";
-        ArrayList<String> visited = new ArrayList<>();
-        ArrayList<String> pending = new ArrayList<>();
-        crawl(1, url, visited);
-        MongoDBManager dbManager = new MongoDBManager();
-        dbManager.CloseConnection();
+    public crawler(HashSet<String> pages_to_visit, HashSet<String> visited_pages) {
+        //System.out.println("started thread " + Thread.currentThread().getName());
+        this.pages_to_visit = pages_to_visit;
+        this.visited_pages = visited_pages;
+    }
+    public void addToVisitedPages(String url) {
+        synchronized (this.visited_pages) {
+            try {
+                visited_pages.add(url);
+            } catch (Exception e) {
+                System.out.println("error");
+            }
+        }
     }
 
-    private static void crawl(int level, String url, ArrayList<String> visited) {
-        try {
-            if (visited.size() < 100) {
-                Document doc = request(url, visited);
-                String text = doc.text();
-                if (doc != null) {
-                    // System.out.println(text);
-                    for (Element link : doc.select("a")) {
+    public void addTopagesToVisit(String url) {
+        synchronized (this.pages_to_visit) {
+            try {
+                if(!this.pages_to_visit.contains(url)) {
+                    this.pages_to_visit.add(url);
+                    this.pages_to_visit.notifyAll();
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
 
-                        String next_link = link.attr("href");
-                        // next_link = processLink(next_link, url);
-                        if (visited.contains(next_link) == false && next_link.startsWith("https://")) {
-                            crawl(level++, next_link, visited);
+    public String pollFrompagesToVisit() {
+        synchronized (this.pages_to_visit) {
+            String next_url = null;
+            try {
+                while(pages_to_visit.isEmpty()){
+                    this.pages_to_visit.wait();
+                }
+                next_url = this.pages_to_visit.iterator().next();
+                this.pages_to_visit.remove(next_url);
+            } catch (Exception e) {
+                System.out.println("error1");
+            }
+            return next_url;
+        }
+    }
+    public int getsize_visited_pages() {
+        synchronized (this.visited_pages) {
+            return this.visited_pages.size();
+        }
+    }
+    public boolean check_if_empty() {
+        synchronized (this.pages_to_visit) {
+            return this.pages_to_visit.isEmpty();
+        }
+    }
+
+    public boolean checkVisitedPages(String url) {
+        synchronized (this.visited_pages) {
+            return this.visited_pages.contains(url);
+        }
+    }
+    public boolean checkPages_to_visit(String url) {
+        synchronized (this.pages_to_visit) {
+            return this.pages_to_visit.contains(url);
+        }
+    }
+
+    public void run() {
+        //System.out.println("started thread " + Thread.currentThread().getId());
+        // crawling until pages_to_visit array is empty or we reach to the desired
+        // number of craweled pages
+
+        while ( getsize_visited_pages() < 10 ) {
+            //System.out.println(getsize_visited_pages());
+            // get first element of pages_to_visit
+            // String next_url = pages_to_visit.poll();
+            String next_url = pollFrompagesToVisit();
+            try {
+                // get content from request function
+                Document doc = request(next_url);
+                if (doc != null) {
+                    // loopover the ancher tags of pages
+                    Elements elements = doc.select("a");
+                    for (Element e : elements) {
+                        String href = e.attr("href");
+                        href = processLink(href,next_url);
+                        if(!checkVisitedPages(href)&&!checkPages_to_visit(href) && href!= null) {
+                            addTopagesToVisit(href);
                         }
+                        // pages_to_visit.add(href);
                     }
                 }
+
+            } catch (Exception ex) {
+                // System.out.println("can't access the URL");
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
+        // System.out.println("Finished, "+Thread.currentThread().getId()+" number of pages visited = " + visited_pages.size());
     }
 
     private static String writeToFile(String url, String text) {
@@ -66,25 +139,29 @@ public class crawler {
         }
     }
 
-    private static Document request(String url, ArrayList<String> v) {
+    private  Document request(String url) {
         try {
             Connection con = Jsoup.connect(url);
             Document doc = con.get();
             if (con.response().statusCode() == 200) {
                 // System.out.println("Link: "+url);
                 // System.out.println("title: "+doc.title());
-                v.add(url);
+                addToVisitedPages(url);
                 //String fileName = writeToFile(url, doc.text());
 
                 String HTML_Document = doc.toString();
-
+                //System.out.println("#thread"+Thread.currentThread().getName()+" link :"+url);
                 long start = System.currentTimeMillis();
+                String title = doc.title();
                 String description = doc.select("meta[name=description]").get(0).attr("content");
-                Integer result = dbManager.insertIntoCrawler(url, doc.title(), HTML_Document,description);
+                Integer result = dbManager.insertIntoCrawler(url, title, HTML_Document,description);
                 long end = System.currentTimeMillis();
                 System.out.println("inserting time :"+ (end-start)/1000 + "s");
                 if (result == 0) {
                     System.out.println("Inserted <" + url + "> successfully");
+                }
+                else if (result == -1){
+                    System.out.println("Inserted <" + url + "> failed");
                 }
                 return doc;
             }
@@ -103,21 +180,30 @@ public class crawler {
         return url;
     }
 
-    /*
-     * private static String processLink(String link, String base) {
-     * 
-     * try { URL u = new URL(base); if (link.startsWith("./")) { link =
-     * link.substring(2, link.length()); link = u.getProtocol() + "://" +
-     * u.getAuthority() + stripFilename(u.getPath()) + link; } else if
-     * (link.startsWith("#")) { link = base + link; } else if
-     * (link.startsWith("javascript:")) { link = null; } else if
-     * (link.startsWith("../") || (!link.startsWith("http://") &&
-     * !link.startsWith("https://"))) { link = u.getProtocol() + "://" +
-     * u.getAuthority() + stripFilename(u.getPath()) + link; } return link; } catch
-     * (Exception e) { e.printStackTrace(); return null; }
-     * 
-     * } private static String stripFilename(String path) { int pos =
-     * path.lastIndexOf("/"); return pos <= -1 ? path : path.substring(0, pos + 1);
-     * }
-     */
+
+    private String processLink(String link, String base) {
+
+        try {
+            URL u = new URL(base);
+            if (link.startsWith("./")) {
+                link = link.substring(2, link.length());
+                link = u.getProtocol() + "://" + u.getAuthority() + stripFilename(u.getPath()) + link;
+            } else if (link.contains("#")) {
+                link = null;
+            } else if (link.startsWith("javascript:")) {
+                link = null;
+            }
+            return link;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    // cleans up the URLs
+    private String stripFilename(String path) {
+        int pos = path.lastIndexOf("/");
+        return pos <= -1 ? path : path.substring(0, pos + 1);
+    }
 }
