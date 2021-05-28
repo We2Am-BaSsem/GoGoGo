@@ -50,27 +50,38 @@ public class MongoDBManager {
         }
     }
 
-    int insertIntoInexer(Hashtable<String, ArrayList<String>> indexer) {
+    int insertIntoIndexer(Hashtable<String, ArrayList<String>> indexer) {
         try {
             MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
             MongoCollection collection = mongoDatabase.getCollection("Inexer");
 
-            List<Document> documents = new ArrayList<Document>();
-
+            List<Document> docs = new ArrayList<Document>();
             for (String key : indexer.keySet()) {
                 Document document = new Document("key", key);
-                // for (int i = 0; i < indexer.get(key).size(); i++) {
-                document.append("URLs", indexer.get(key));
-                // }
-                // documents.add(document);
-                try {
-                    collection.insertOne(document);
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                document.append("DF", indexer.get(key).size());
+                Document URLTFdoc = new Document();
+                List<Document> documents = new ArrayList<Document>();
+                for (int i = 0; i < indexer.get(key).size(); i++) {
+                    String data = indexer.get(key).get(i);
+                    int indexTitle = data.indexOf("->title:");
+                    int indexTF = data.indexOf("->TF");
+                    String url = data.substring(0, indexTitle);
+                    String title = data.substring(indexTitle + 8, indexTF);
+                    String TF = data.substring(indexTF + 4, data.length());
+                    URLTFdoc.append("URL", url);
+                    URLTFdoc.append("TF", Integer.parseInt(TF));
+                    URLTFdoc.append("title", title);
+                    documents.add(URLTFdoc);
                 }
+                document.append("URLs", documents);
+                docs.add(document);
             }
 
-            // collection.insertMany(documents);
+            try {
+                collection.insertMany(docs);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
             return 0;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -83,7 +94,7 @@ public class MongoDBManager {
         try {
             MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
             MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
-             
+
             return collection.find();
         } catch (Exception e) {
             System.out.println(e.getMessage());

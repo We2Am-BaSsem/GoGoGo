@@ -4,20 +4,14 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
 
-import com.mongodb.DBCursor;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoCursor;
 import org.bson.Document;
-import org.jsoup.Jsoup;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 
 public class Indexer {
     // static HashMap<String, Long> keyWords = new HashMap<String, Long>();
+    // word -> {{url1,TF1},{url2,TF2},{url3,TF3},{url4,TF4}}
     static Hashtable<String, ArrayList<String>> indexer = new Hashtable<String, ArrayList<String>>();
     static ArrayList<String> stopWords = new ArrayList<String>();
 
@@ -38,44 +32,31 @@ public class Indexer {
             Integer i = 0;
             start = System.currentTimeMillis();
             for (Document doc : cursor) {
-                System.out.println(i + "- " + doc.get("URL"));
-                // System.out.println("\"" + Item.get("filename").toString() + "\"");
+                // System.out.println(i + "- " + doc.get("URL"));
 
-                // str = str.replaceAll("\\<.*?\\>", "");
-                String pageContent = (doc.get("HTML_Document").toString()).replaceAll("\\<.*?\\>", "");
-                //pageContent = pageContent.replaceAll("<head >([^<]*)</head>", "");
+                String pageContent = (doc.get("HTML_Document").toString());
+                String url = doc.get("URL").toString();
+                String title = (pageContent.substring(pageContent.indexOf("<title>"), pageContent.indexOf("</title>")))
+                        .replace("<title>", "");
+                pageContent = pageContent.replaceAll("<style([\\s\\S]+?)</style>", "");
+                pageContent = pageContent.replaceAll("<meta[^>]*>", "");
+                pageContent = pageContent.replaceAll("<link[^>]*>", "");
+                pageContent = pageContent.replaceAll("<script[^>]*>[^>]*</script>", "");
                 pageContent = pageContent.replaceAll("<head>[^>]*</head>", "");
                 pageContent = pageContent.replaceAll("<[^>]*>", "");
 
-                // pageContent = pageContent.replaceAll("\\<.*?\\>", "");
-                //pageContent = Jsoup.parse(pageContent).text();
-
                 // here we index each page one by one
-                Index(pageContent, doc.get("URL").toString());
-
+                Index(pageContent, url, title);
                 i++;
             }
-            end = System.currentTimeMillis();
-            System.out.println("\n******************************\nindexing time: " + (end - start) / 1000
-                    + "s\n******************************\n");
-
-            /*
-             * // while (cursor.cursor().hasNext()) { // Document Item =
-             * cursor.cursor().next(); // System.out.println(i + "- " +
-             * Item.get("URL").toString()); // // System.out.println("\"" +
-             * Item.get("filename").toString() + "\""); // // str =
-             * str.replaceAll("\\<.*?\\>", ""); // String pageContent =
-             * (Item.get("HTML_Document").toString()).replaceAll("\\<.*?\\>", ""); // //
-             * pageContent = pageContent.replaceAll("\\<.*?\\>", ""); // // pageContent =
-             * pageContent.replaceAll("\\<.*?\\>", ""); // pageContent =
-             * Jsoup.parse(pageContent).text(); // // here we index each page one by one //
-             * Index(pageContent, Item.get("URL").toString()); // i++; // } //
-             * System.out.println(indexer);
-             */
 
             // create the inverted file and store it in the indexer
             writeToFile(indexer);
             InsertIntoDB(dbManager);
+
+            end = System.currentTimeMillis();
+            System.out.println("\n******************************\nindexing time: " + (end - start) / 1000
+                    + "s\n******************************\n");
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -85,10 +66,10 @@ public class Indexer {
     private static void InsertIntoDB(MongoDBManager dbManager) {
         try {
             dbManager = new MongoDBManager();
-            dbManager.insertIntoInexer(indexer);
+            dbManager.insertIntoIndexer(indexer);
             dbManager.CloseConnection();
         } catch (Exception e) {
-            // TODO: handle exception
+            System.out.println(e.getMessage());
         }
     }
 
@@ -104,32 +85,26 @@ public class Indexer {
         }
     }
 
-    private static void Index(String pageContent, String url) {
+    private static void Index(String pageContent, String url, String title) {
         try {
-            PrintWriter out = new PrintWriter("docs\\HTML_Document.txt");
-            out.write(pageContent);
-            out.close();
-            Scanner In = new Scanner(new File("docs\\HTML_Document.txt"));
-            while (In.hasNext()) {
+            String[] words = pageContent.split(" ");
+            Hashtable<String, Long> indexerKeysTF = new Hashtable<String, Long>();
+            ArrayList<String> wordTags = new ArrayList<String>();
+            for (int i = 0; i < words.length; i++) {
 
-                String preWord = In.next();
-                preWord.toLowerCase();
+                String pageWord = words[i];
+                pageWord.toLowerCase();
 
                 // 1- we remove special chars from the word before processing
                 // and then check if it was a special we continue looping
                 // if not we process
-                String word = specialCharStemmer(preWord);
+                String word = specialCharStemmer(pageWord);
                 if (word.length() == 0 || stopWords.contains(word))
                     continue;
 
                 // 2- we stem the word
                 PorterStemmer ps = new PorterStemmer();
                 word = ps.stemWord(word);
-
-                /*
-                 * // if (keyWords.containsKey(word)) { // keyWords.put(word, keyWords.get(word)
-                 * + 1); // } else { // keyWords.put(word, (long) 1); // }
-                 */
 
                 // 3- we check if this word was indexed before
                 if (indexer.containsKey(word)) {
@@ -143,8 +118,21 @@ public class Indexer {
                     indexer.put(word, temp);
                 }
 
+                // 4-
+                if (indexerKeysTF.containsKey(word)) {
+                    indexerKeysTF.put(word, indexerKeysTF.get(word) + 1);
+                } else {
+                    indexerKeysTF.put(word, (long) 1);
+                }
             }
-            In.close();
+            for (String key : indexerKeysTF.keySet()) {
+                Long TF = indexerKeysTF.get(key);
+                Integer index = (indexer.get(key)).indexOf(url);
+                String temp = indexer.get(key).get(index).concat("->title:" + title);
+                temp = temp.concat("->TF" + TF.toString());
+                indexer.get(key).set(index, temp);
+            }
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
