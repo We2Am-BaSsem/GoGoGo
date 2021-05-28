@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Libraries">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Search Engine/Libraries/jsoup-1.13.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Search Engine/Libraries/mongo-java-driver-3.12.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Search Engine/Libraries/porter-stemmer-1.0.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

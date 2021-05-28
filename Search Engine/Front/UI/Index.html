@@ -2869,6 +2869,21 @@ window.application = new Application();
 	<div class="GoGoGo___Copyrights_reserved_2_Class">
 		<span>GoGoGo - Copyrights reserved 2021</span>
 	</div>
+	<label for="Speech Recognition">Speech Recognition</label>
+    <input type="text" name="" id="speechToText" placeholder="Speak Something" onclick="record()">
 </div>
 </body>
+<script> 
+ function record() {
+            var recognition = new webkitSpeechRecognition();
+            recognition.lang = "en-GB";
+
+            recognition.onresult = function(event) {
+                // console.log(event);
+                document.getElementById('speechToText').value = event.results[0][0].transcript;
+            }
+            recognition.start();
+
+        }
+</script>
 </html>
