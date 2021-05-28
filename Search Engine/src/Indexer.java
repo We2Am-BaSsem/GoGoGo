@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Scanner;
 
@@ -12,7 +13,7 @@ import ca.rmen.porterstemmer.PorterStemmer;
 public class Indexer {
     // static HashMap<String, Long> keyWords = new HashMap<String, Long>();
     // word -> {{url1,TF1},{url2,TF2},{url3,TF3},{url4,TF4}}
-    static Hashtable<String, ArrayList<String>> indexer = new Hashtable<String, ArrayList<String>>();
+    static HashMap<String, ArrayList<String>> indexer = new HashMap<String, ArrayList<String>>();
     static ArrayList<String> stopWords = new ArrayList<String>();
 
     public static void main(String[] args) throws Exception {
@@ -138,7 +139,7 @@ public class Indexer {
         }
     }
 
-    private static void writeToFile(Hashtable<String, ArrayList<String>> indexer) {
+    private static void writeToFile(HashMap<String, ArrayList<String>> indexer) {
         try {
             PrintWriter out = new PrintWriter("index\\index.txt");
             for (String keyWord : indexer.keySet()) {

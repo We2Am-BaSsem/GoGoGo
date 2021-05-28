@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class MongoDBManager {
         }
     }
 
-    int insertIntoIndexer(Hashtable<String, ArrayList<String>> indexer) {
+    int insertIntoIndexer(HashMap<String, ArrayList<String>> indexer) {
         try {
             MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
             MongoCollection collection = mongoDatabase.getCollection("Inexer");
