@@ -6,7 +6,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 
-
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +17,7 @@ public class crawler {
         ArrayList <String> URLS = new ArrayList<>();
         ArrayList <String> fileNames = new ArrayList<>();
 
-        public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         String url = "https://developers.google.com/community/dsc-solution-challenge";
         ArrayList<String> visited = new ArrayList<>();
         ArrayList<String> pending = new ArrayList<>();
@@ -82,7 +81,8 @@ public class crawler {
             return null;
         }
     }
-  private static String set_up_url(String url){
+  
+    private static String set_up_url(String url){
       int pos1 =  url.indexOf('.');
 
       url = url.substring(pos1,url.length()-1);
