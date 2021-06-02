@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
@@ -15,29 +16,40 @@ import org.bson.Document;
 public class MongoDBManager {
     // first we store the connection string to connect with database
     // then we create a client
-    // static String connectionString =
-    // "mongodb+srv://SearchEngine:SearchEngine123456@crawler.sajqt.mongodb.net/admin";
-    // static MongoClientURI clientURI = new MongoClientURI(connectionString);
-    // static MongoClient mongoClient = new MongoClient(clientURI);
-    static MongoClient mongoClient = new MongoClient("localhost", 27017);
+    static String connectionString = "mongodb+srv://SearchEngine:SearchEngine123456@crawler.sajqt.mongodb.net/admin";
+    static MongoClientURI clientURI = new MongoClientURI(connectionString);
+    static MongoClient mongoClient = new MongoClient(clientURI);
 
-    // public static void main(String[] args) {
-    //     try {
-    //         MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-    //         MongoCollection collection = mongoDatabase.getCollection("Crawler");
-    //         Document document = new Document();
-    //         collection.deleteMany(document);
+    // static MongoClient mongoClient = new MongoClient("localhost", 27017);
 
-    //     } catch (Exception e) {
-    //         System.out.println(e.getMessage());
-    //     }
-    // }
+    public static void main(String[] args) {
+        try {
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+            MongoDBManager manager = new MongoDBManager();
+            //manager.insertIntobeVisited("https://Raz3.com");
+            //manager.insertIntobeVisited("https://naksh.com");
+            //manager.insertIntobeVisited("https://hh.com");
+            //manager.insertIntobeVisited("https://lol.com");
+
+            Document doc = manager.retrieveFrombeVisited();
+            System.out.println("\n\n\n"+doc.get("URL")+"\n\n\n");
+            manager.deleteFrombeVisited(doc.get("URL").toString());
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     int insertIntoCrawler(String URL, String title, String HTML_doc, String description) {
         try {
             // we access to the collection that should store the crawled pages data
-            MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-            MongoCollection collection = mongoDatabase.getCollection("Crawler");
+
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            // MongoCollection collection = mongoDatabase.getCollection("Crawler");
 
             // we prepare the document that should be inserted
             Document document = new Document("URL", URL);
@@ -51,6 +63,66 @@ public class MongoDBManager {
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return -1;
+        }
+    }
+
+    int insertIntobeVisited(String URL) {
+        try {
+            // we access to the collection that should store the crawled pages data
+
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            // MongoCollection collection = mongoDatabase.getCollection("Visited");
+
+            // we prepare the document that should be inserted
+            Document document = new Document("URL", URL);
+
+            collection.insertOne(document);
+
+            return 0;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+    }
+
+    int deleteFrombeVisited(String URL) {
+        try {
+            // we access to the collection that should store the crawled pages data
+
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            // MongoCollection collection = mongoDatabase.getCollection("Visited");
+
+            Document document = new Document("URL", URL);
+            collection.deleteOne(document);
+
+            return 0;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+    }
+
+    Document retrieveFrombeVisited() {
+        try {
+            // we access to the collection that should store the crawled pages data
+
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            // MongoCollection collection = mongoDatabase.getCollection("Visited");
+
+            return (Document) (collection.find().first());
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -149,10 +221,15 @@ public class MongoDBManager {
     }
 
     void insertIntoIndexer2(Hashtable<String, List<Document>> indexer) {
-        MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-        MongoCollection collection = mongoDatabase.getCollection("Indexer");
+        MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+        MongoCollection collection = mongoDatabase.getCollection("Inexer");
+
+        // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+        // MongoCollection collection = mongoDatabase.getCollection("Indexer");
 
         try {
+            Long start = System.currentTimeMillis();
+
             List<Document> docs = new ArrayList<Document>();
             try {
                 Integer i = 0;
@@ -182,6 +259,10 @@ public class MongoDBManager {
             // } catch (Exception e) {
             // System.out.println(e.getMessage());
             // }
+            Long end = System.currentTimeMillis();
+            System.out.println("\n******************************\nIndexer Insertion Time: " + (end - start) / 1000
+                    + "s\n******************************\n");
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -189,8 +270,11 @@ public class MongoDBManager {
 
     FindIterable<Document> retrieveFromCrawler() {
         try {
-            MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-            MongoCollection collection = mongoDatabase.getCollection("Crawler");
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            MongoCollection collection = mongoDatabase.getCollection("CrawledPages");
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            // MongoCollection collection = mongoDatabase.getCollection("Crawler");
 
             return collection.find();
         } catch (Exception e) {
