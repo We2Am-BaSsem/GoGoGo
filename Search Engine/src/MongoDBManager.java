@@ -36,7 +36,7 @@ public class MongoDBManager {
     public static void main(String[] args) {
     try {
     MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-    MongoCollection collection = mongoDatabase.getCollection("Crawler");
+    MongoCollection collection = mongoDatabase.getCollection("Visited");
     collection.deleteMany(new Document());
 
     // MongoDBManager manager = new MongoDBManager();

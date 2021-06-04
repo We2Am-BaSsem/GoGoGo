@@ -24,6 +24,7 @@ import com.mongodb.internal.connection.Time;
 public class crawler implements Runnable {
     private String start_url;
     public HashSet<String> visited_pages;
+    public HashSet<String> toVisit_pages = new HashSet<String>();
 
     static MongoDBManager dbManager = new MongoDBManager();
 
@@ -48,23 +49,29 @@ public class crawler implements Runnable {
     }
 
     public void addTopagesToVisit(String url) {
-        synchronized (this.dbManager) {
-            try {
-                int result = dbManager.insertIntobeVisited(url);
-                if (result == -1) {
-                    System.out
-                            .println("thread #" + Thread.currentThread().getName() + "fail to insert be visited" + url);
-                } else {
-                    System.out.println(
-                            "thread #" + Thread.currentThread().getName() + "suucessfully to insert be visited" + url);
+        if (!(this.toVisit_pages.contains(url) || this.visited_pages.contains(url))) {
+
+            synchronized (this.dbManager) {
+                try {
+                    int result = dbManager.insertIntobeVisited(url);
+                    if (result == -1) {
+                        System.out.println(
+                                "thread #" + Thread.currentThread().getName() + "fail to insert be visited" + url);
+                        this.toVisit_pages.add(url);
+                    } else {
+                        System.out.println("thread #" + Thread.currentThread().getName()
+                                + "suucessfully to insert be visited" + url);
+                        this.toVisit_pages.add(url);
+                    }
+                    // if(!this.pages_to_visit.contains(url)) {
+                    // this.pages_to_visit.add(url);
+                    // this.pages_to_visit.notifyAll();
+                    this.dbManager.notifyAll();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                // if(!this.pages_to_visit.contains(url)) {
-                // this.pages_to_visit.add(url);
-                // this.pages_to_visit.notifyAll();
-                this.dbManager.notifyAll();
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+
         }
     }
 
@@ -98,6 +105,12 @@ public class crawler implements Runnable {
         }
     }
 
+    public boolean checkToVisitPages(String url) {
+        synchronized (this.toVisit_pages) {
+            return this.toVisit_pages.contains(url);
+        }
+    }
+
     public void run() {
 
         while (getsize_visited_pages() < 15) {
@@ -117,13 +130,13 @@ public class crawler implements Runnable {
                         String href = e.attr("href");
                         href = normalize(href, next_url);
                         try {
-                            if (!checkVisitedPages(href) && href != null && robotSafe(href)) {
+                            if (href != null &&  !checkToVisitPages(href) && !checkVisitedPages(href) && robotSafe(href)) {
                                 // System.out.println("e2 " + href);
                                 addTopagesToVisit(href);
-    
+
                             }
                         } catch (Exception e2) {
-                            //TODO: handle exception
+                            System.out.println(e2.getMessage());
                         }
                     }
                 }
@@ -177,7 +190,7 @@ public class crawler implements Runnable {
                     // addToVisitedPages(url);
                     addToVisitedPages(url);
                 } else if (result == -1) {
-                    System.out.println("Inserted <" + url + "> failed");                    
+                    System.out.println("Inserted <" + url + "> failed");
                     addToVisitedPages(url);
                 }
                 return doc;
