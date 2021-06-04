@@ -36,7 +36,7 @@ public class MongoDBManager {
     public static void main(String[] args) {
     try {
     MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-    MongoCollection collection = mongoDatabase.getCollection("Indexer");
+    MongoCollection collection = mongoDatabase.getCollection("Crawler");
     collection.deleteMany(new Document());
 
     // MongoDBManager manager = new MongoDBManager();
@@ -87,6 +87,28 @@ public class MongoDBManager {
             // MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
 
             MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
+            MongoCollection collection = mongoDatabase.getCollection("ToBeVisited");
+
+            // we prepare the document that should be inserted
+            Document document = new Document("URL", URL);
+
+            collection.insertOne(document);
+
+            return 0;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+    }
+
+    int insertIntoVisited_pages(String URL) {
+        try {
+            // we access to the collection that should store the crawled pages data
+
+            // MongoDatabase mongoDatabase = mongoClient.getDatabase("Crawler");
+            // MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
+
+            MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
             MongoCollection collection = mongoDatabase.getCollection("Visited");
 
             // we prepare the document that should be inserted
@@ -109,7 +131,7 @@ public class MongoDBManager {
             // MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
 
             MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-            MongoCollection collection = mongoDatabase.getCollection("Visited");
+            MongoCollection collection = mongoDatabase.getCollection("ToBeVisited");
 
             Document document = new Document("URL", URL);
             collection.deleteOne(document);
@@ -129,7 +151,7 @@ public class MongoDBManager {
             // MongoCollection collection = mongoDatabase.getCollection("PagesToBeVisited");
 
             MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-            MongoCollection collection = mongoDatabase.getCollection("Visited");
+            MongoCollection collection = mongoDatabase.getCollection("ToBeVisited");
 
             return (Document) (collection.find().first());
 
