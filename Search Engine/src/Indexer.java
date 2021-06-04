@@ -3,59 +3,89 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.print.Doc;
+import javax.swing.plaf.basic.BasicToolBarUI.DockingListener;
 
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
+
 import org.bson.Document;
 
 import ca.rmen.porterstemmer.PorterStemmer;
 
-public class Indexer {
+public class Indexer implements Runnable {
     // static HashMap<String, Long> keyWords = new HashMap<String, Long>();
     // word -> {{url1,TF1},{url2,TF2},{url3,TF3},{url4,TF4}}
-    static HashMap<String, ArrayList<String>> indexer = new HashMap<String, ArrayList<String>>();
-    static ArrayList<String> stopWords = new ArrayList<String>();
+    public HashMap<String, ArrayList<String>> indexer = new HashMap<String, ArrayList<String>>();
+    public ArrayList<String> stopWords = new ArrayList<String>();
+    public Hashtable<String, List<Document>> docsKeyURLS = new Hashtable<String, List<Document>>();
+    public MongoDBManager dbManager = new MongoDBManager();
+    public MongoCursor<Document> cursor;
+    public AtomicInteger i = new AtomicInteger();
 
-    public static void main(String[] args) throws Exception {
+    Indexer(Hashtable<String, List<Document>> indx) {
         try {
             // first we need to indetify the stop words we shouldn't index
             fillStopWords();
 
-            // then we retrieve the data,crawled pages data, from the database
-            MongoDBManager dbManager = new MongoDBManager();
+            docsKeyURLS = indx;
 
             long start = System.currentTimeMillis();
-            FindIterable<Document> cursor = dbManager.retrieveFromCrawler();
+            this.cursor = dbManager.retrieveFromCrawler().iterator();
             long end = System.currentTimeMillis();
             System.out.println("\n******************************\nretrive time: " + (end - start) / 1000
                     + "s\n******************************\n");
 
-            Integer i = 0;
-            start = System.currentTimeMillis();
-            for (Document doc : cursor) {
-                // System.out.println(i + "- " + doc.get("URL"));
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+    }
+
+    public void run() {
+        try {
+            Long start = System.currentTimeMillis();
+            //for (Document doc : cursor) {
+            while(checkCursor()){
+                Document doc = getCursor();
+                System.out.println(i + "- " + doc.get("URL"));
 
                 String pageContent = (doc.get("HTML_Document").toString());
                 String url = doc.get("URL").toString();
-                String title = (pageContent.substring(pageContent.indexOf("<title>"), pageContent.indexOf("</title>")))
-                        .replace("<title>", "");
+                String title = doc.get("title").toString();
+                String description = doc.get("Description").toString();
                 pageContent = pageContent.replaceAll("<style([\\s\\S]+?)</style>", "");
+                pageContent = pageContent.replaceAll("<script([\\s\\S]+?)</script>", "");
                 pageContent = pageContent.replaceAll("<meta[^>]*>", "");
                 pageContent = pageContent.replaceAll("<link[^>]*>", "");
-                pageContent = pageContent.replaceAll("<script[^>]*>[^>]*</script>", "");
+                // pageContent = pageContent.replaceAll("<script[^>]*>[^>]*</script>", "");
                 pageContent = pageContent.replaceAll("<head>[^>]*</head>", "");
                 pageContent = pageContent.replaceAll("<[^>]*>", "");
 
                 // here we index each page one by one
-                Index(pageContent, url, title);
-                i++;
+                Index(pageContent, url, title, description);
+
+                synchronized (this.i) {
+                    i.incrementAndGet();
+                }
+
+                // synchronized(this.docsKeyURLS){
+                //     if(i.get()>=500){
+                //         InsertIntoDB(dbManager);
+                //         docsKeyURLS.clear();
+                //         i.set(0);
+                //     }
+                // }
             }
 
             // create the inverted file and store it in the indexer
-            writeToFile(indexer);
-            InsertIntoDB(dbManager);
+            // writeToFile(indexer);
+            // InsertIntoDB(dbManager);
 
-            end = System.currentTimeMillis();
+            Long end = System.currentTimeMillis();
             System.out.println("\n******************************\nindexing time: " + (end - start) / 1000
                     + "s\n******************************\n");
 
@@ -64,29 +94,7 @@ public class Indexer {
         }
     }
 
-    private static void InsertIntoDB(MongoDBManager dbManager) {
-        try {
-            dbManager = new MongoDBManager();
-            dbManager.insertIntoIndexer(indexer);
-            dbManager.CloseConnection();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    private static void fillStopWords() {
-        try {
-            // we just read the txt file and store it in an array list
-            Scanner In = new Scanner(new File("StopWords_dataSet\\English.txt"));
-            while (In.hasNext()) {
-                stopWords.add(In.next());
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    private static void Index(String pageContent, String url, String title) {
+    private void Index(String pageContent, String url, String title, String desc) {
         try {
             String[] words = pageContent.split(" ");
             Hashtable<String, Long> indexerKeysTF = new Hashtable<String, Long>();
@@ -127,11 +135,26 @@ public class Indexer {
                 }
             }
             for (String key : indexerKeysTF.keySet()) {
-                Long TF = indexerKeysTF.get(key);
-                Integer index = (indexer.get(key)).indexOf(url);
-                String temp = indexer.get(key).get(index).concat("->title:" + title);
-                temp = temp.concat("->TF" + TF.toString());
-                indexer.get(key).set(index, temp);
+                Document tempDoc = new Document();
+                tempDoc.append("URL", url);
+                tempDoc.append("Title", title);
+                tempDoc.append("Description", desc);
+                tempDoc.append("TF", indexerKeysTF.get(key));
+                tempDoc.append("URL",url);
+                tempDoc.append("Title",title);
+                tempDoc.append("Description",desc);
+                tempDoc.append("TF",indexerKeysTF.get(key));
+
+                synchronized (this.docsKeyURLS) {
+                    if (docsKeyURLS.get(key) == null) {
+                        List temp = new ArrayList<Document>();
+                        temp.add(tempDoc);
+                        docsKeyURLS.put(key, temp);
+                    } else {
+                        docsKeyURLS.get(key).add(tempDoc);
+                    }
+                }
+                //docsKeyURLS.notifyAll();
             }
 
         } catch (Exception e) {
@@ -139,23 +162,51 @@ public class Indexer {
         }
     }
 
-    private static void writeToFile(HashMap<String, ArrayList<String>> indexer) {
+    private boolean checkCursor(){
         try {
-            PrintWriter out = new PrintWriter("index\\index.txt");
-            for (String keyWord : indexer.keySet()) {
-                out.write(keyWord + ':');
-                for (int i = 0; i < indexer.get(keyWord).size(); i++) {
-                    out.write(indexer.get(keyWord).get(i) + " --- ");
-                }
-                out.write('\n');
+            synchronized(this.cursor){
+                return cursor.hasNext();
             }
-            out.close();
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (Exception e) {
+            //TODO: handle exception
+            return false;
         }
     }
 
-    private static String specialCharStemmer(String preWord) {
+    private Document getCursor(){
+        try {
+            synchronized(this.cursor){
+                return cursor.next();
+            }
+        } catch (Exception e) {
+            //TODO: handle exception
+            return null;
+        }
+    }
+
+    private void InsertIntoDB(MongoDBManager dbManager) {
+        try {
+            dbManager = new MongoDBManager();
+            dbManager.insertIntoIndexer2(this.docsKeyURLS);
+            //dbManager.CloseConnection();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void fillStopWords() {
+        try {
+            // we just read the txt file and store it in an array list
+            Scanner In = new Scanner(new File("StopWords_dataSet\\English.txt"));
+            while (In.hasNext()) {
+                stopWords.add(In.next());
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private String specialCharStemmer(String preWord) {
         try {
             int i = 0;
             while (i < preWord.length() && (preWord.charAt(i) < 'A'
@@ -185,4 +236,21 @@ public class Indexer {
             return "";
         }
     }
+
+
+    // private  void writeToFile(HashMap<String, ArrayList<String>> indexer) {
+    //     try {
+    //         PrintWriter out = new PrintWriter("index\\index.txt");
+    //         for (String keyWord : indexer.keySet()) {
+    //             out.write(keyWord + ':');
+    //             for (int i = 0; i < indexer.get(keyWord).size(); i++) {
+    //                 out.write(indexer.get(keyWord).get(i) + " --- ");
+    //             }
+    //             out.write('\n');
+    //         }
+    //         out.close();
+    //     } catch (Exception ex) {
+    //         System.out.println(ex.getMessage());
+    //     }
+    // }
 }
