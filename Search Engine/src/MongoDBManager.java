@@ -254,7 +254,7 @@ public class MongoDBManager {
         MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
         MongoCollection collection = mongoDatabase.getCollection("Crawler");
 
-        Long documentsNumber = collection.count();
+        Long documentsNumber = collection.countDocuments();
         collection = mongoDatabase.getCollection("Indexer");
 
         try {
