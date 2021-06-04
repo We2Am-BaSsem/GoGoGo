@@ -2,63 +2,49 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class crawlerScheduler {
 
+    MongoDBManager dbManager = new MongoDBManager();
     //String start_url;
-    HashSet<String> pages_to_visit = new HashSet<String>();
-    HashSet<String> visited_pages = new HashSet<String>();
+    static  HashSet<String> visited_pages = new HashSet<String>();
+    String start_url;
 
-    public crawlerScheduler(String start_url) {
-//        ExecutorService executor = Executors.newFixedThreadPool(4);// creating a pool of 4 threads
-//
-//        this.start_url = start_url;
-//        this.pages_to_visit.add(start_url);
-//
-//        //do {
-//            Runnable crawler = new crawlerThread(this.pages_to_visit, this.visited_pages);
-//            executor.execute(crawler);// calling execute method of ExecutorService
-//        //} while (!pages_to_visit.isEmpty());
-//
-//        // Finished
-//        executor.shutdown();
-//        while (!executor.isTerminated()) {
-//        }
-//
-//        System.out.println("Finished all threads");
-        //String start_url = "https://stackoverflow.com";
-        String [] seeds = {"https://www.programiz.com/"};
-        this.pages_to_visit.add(start_url);
-        crawler crawling_seed = new crawler(this.pages_to_visit, this.visited_pages);
-        Thread t1, t2, t3;
-        t1 = new Thread(crawling_seed);
-        t2 = new Thread(crawling_seed);
-        t3 = new Thread(crawling_seed);
+    public crawlerScheduler(String [] seeds) {
 
-        t1.setName("1");
-        t2.setName("2");
-        t3.setName("3");
+
+
+        System.out.println("Enter the Number of Threads : ");
+
+        int n = -1;
+        while (n <= 0)
+            try {
+                n = new Scanner(System.in).nextInt();
+            } catch (Exception e) {
+                System.out.println("Please Enter a Number");
+                n = -1;
+            }
+
+        Thread[] threads = new Thread[n];
+
+        for (int i = 0; i < n; i++) {
+            threads[i] = new Thread(new crawler( this.visited_pages, seeds[i]));
+            threads[i].setName(Integer.toString(i));
+        }
+
         long before = System.currentTimeMillis();
-        t1.start();
-        t2.start();
-        t3.start();
-        try {
-            t1.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            t2.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            t3.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long after = System.currentTimeMillis();
-        System.out.println("Time  = " + (after - before) + " ms = " + (after - before) / 60000 + " min");
+        for (int i = 0; i < n; i++)
+            threads[i].start();
 
+        for (int i = 0; i < n; i++)
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        long after = System.currentTimeMillis();
     }
 }
+

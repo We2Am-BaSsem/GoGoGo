@@ -7,8 +7,12 @@ public class Main {
         mongoLogger.setLevel(Level.SEVERE);
         MongoDBManager dbManager = new MongoDBManager();
 
-        String start_url = "https://mkyong.com/java/how-to-delete-directory-in-java/";
-        crawlerScheduler crawler = new crawlerScheduler (start_url);
-        dbManager.CloseConnection();
+        String[] seeds = {"https://www.w3schools.com/tags/tag_textarea.asp",
+                "https://www.sanfoundry.com/java-program-compute-determinant-matrix/",
+                "https://www.youtube.com/watch?v=Dj2R-f9zgGs",
+                "https://en.wikipedia.orgapi/",
+                "https://www.w3schools.com/tags/tag_textarea.asp"};
+        crawlerScheduler crawler = new crawlerScheduler (seeds);
+
     }
 }
