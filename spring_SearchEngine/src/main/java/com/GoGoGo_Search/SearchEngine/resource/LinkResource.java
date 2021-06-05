@@ -48,7 +48,7 @@ public class LinkResource {
         } else if (mode.equals("And")) {
             //key1-> url1 url5 url3
             //key2-> url5 url3 url7
-            //result-> url5 url3
+            //result-> url5 url3 url7
 
             HashMap<Document, Long> URLSAndMode = new HashMap<>();
 
@@ -66,8 +66,8 @@ public class LinkResource {
             }
         }
 
-        myJSONdoc doc = new myJSONdoc(keys, URLS, URLS.size());
+        myJSONdoc results = new myJSONdoc(keys, URLS, URLS.size());
 
-        return doc;
+        return results;
     }
 }

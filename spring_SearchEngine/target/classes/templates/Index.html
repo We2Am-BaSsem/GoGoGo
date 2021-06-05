@@ -5,24 +5,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="Group_2_1.png" />
-    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="../static/index.css" />
     <title>GoGoGo</title>
   </head>
   <body>
     <main>
       <div class="Decor">
-        <img class="LeftBrac" src="Group_8.png" />
-        <a href="Index.html"><img class="Logo" src="Group_2_1.png" /></a>
-        <img class="RightBrac" src="Group_7_bb.png" />
+        <img class="LeftBrac" src="../static/Group_8.png" />
+        <a href="Index.html"><img class="Logo" src="../static/Group_2_1.png" /></a>
+        <img class="RightBrac" src="../static/Group_7_bb.png" />
       </div>
-      <form class="Form">
-        <input type="text" name="searchfield" id="searchfield" />
+      <form class="Form"  action="http://localhost:8093/rest/links/findKey" method="GET">
+        <input type="text" name="searchSentence" id="searchfield" />
         <label id="searchnotes" for="searchfield"></label>
         <!--<input type="text" name="" id="speechToText" placeholder="Speak Something" onfocus="record()">-->
         <div class="LowBar">
           <div class="Options">
             <button type="button" class="icon" onfocus="record()">
-              <img src="microphone.png" alt="" />
+              <img src="../static/microphone.png" alt="" />
             </button>
             |
             <input
@@ -34,7 +34,7 @@
             />
             <label for="modeAnd">
               <button type="button" class="icon" id="AndIcon" onclick="And()">
-                <img src="img_476874_30302.png" alt="" />
+                <img src="../static/img_476874_30302.png" alt="" />
               </button>
             </label>
             <input
@@ -46,7 +46,7 @@
             />
             <label for="modeOr">
               <button type="button" class="icon" id="OrIcon" onclick="Or()">
-                <img src="881194-200.png" alt="" />
+                <img src="../static/881194-200.png" alt="" />
               </button>
             </label>
             |
@@ -56,7 +56,7 @@
               id="EquationIcon"
               onclick="Equation()"
             >
-              <img src="Eq.png" alt="" />
+              <img src="../static/Eq.png" alt="" />
             </button>
             |
             <button
@@ -65,7 +65,7 @@
               id="DeleteIcon"
               onclick="document.getElementById('searchfield').value = '';"
             >
-              <img src="delete.png" alt="" />
+              <img src="../static/delete.png" alt="" />
             </button>
             |
           </div>
