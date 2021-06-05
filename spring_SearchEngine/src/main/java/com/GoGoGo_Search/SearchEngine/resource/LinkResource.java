@@ -22,18 +22,18 @@ public class LinkResource {
         this.linkRepo = linkRepo;
     }
 
-//    searchfield=play+men+&mode=Or
-//    searchfield=play+men+&mode=And
+
     @RequestMapping(method = RequestMethod.GET ,path = "/findKey")
-    public myJSONdoc getAll(@RequestParam(defaultValue = "") String searchkey) {
+    public myJSONdoc getAll(@RequestParam(defaultValue = "") String searchkey, String mode) {
 
         //
-        searchkey = searchkey.replaceAll("\\+", ",");
-        List<String> searchWords = Arrays.asList(searchkey);
-
+        String[] myArr = searchkey.split(" ");
         System.out.println("\nI was searching for: " +searchkey);
 
-        String mode = "Or";//searchkey.substring(searchkey.indexOf('='));
+        List<String> searchWords = Arrays.asList(myArr);
+
+
+        //String mode = "Or";//searchkey.substring(searchkey.indexOf('='));
         System.out.println("I was in mode: " +mode);
         //
         ArrayList<String> keys = new ArrayList<>();
