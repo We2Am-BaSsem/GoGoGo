@@ -7,12 +7,21 @@ public class Main {
         mongoLogger.setLevel(Level.SEVERE);
         MongoDBManager dbManager = new MongoDBManager();
 
-        String[] seeds = {"https://www.w3schools.com/tags/tag_textarea.asp",
-                "https://www.sanfoundry.com/java-program-compute-determinant-matrix/",
-                "https://www.youtube.com/watch?v=Dj2R-f9zgGs",
-                "https://en.wikipedia.orgapi/",
-                "https://www.w3schools.com/tags/tag_textarea.asp"};
+        String[] seeds = {
+                "https://www.w3schools.com",
+                "https://spring.io/",
+                "https://www.javatpoint.com",
+                "https://docs.mongodb.com",
+                "https://www.gamespot.com/",
+                "https://www.skysports.com/",
+                "https://cooking.nytimes.com/",
+                "https://en.unesco.org/",
+                "https://www.who.int/",
+                "https://www.imdb.com/"
+        };
+        long start = System.currentTimeMillis();
         crawlerScheduler crawler = new crawlerScheduler (seeds);
-
+        long time = (System.currentTimeMillis() - start) / 1000;
+        System.out.println("\nTime taken = " + time + " ms");
     }
 }

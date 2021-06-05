@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 public class crawlerScheduler {
 
-    MongoDBManager dbManager = new MongoDBManager();
     //String start_url;
     static  HashSet<String> visited_pages = new HashSet<String>();
     String start_url;
@@ -28,7 +27,6 @@ public class crawlerScheduler {
             }
 
         Thread[] threads = new Thread[n];
-
         for (int i = 0; i < n; i++) {
             threads[i] = new Thread(new crawler( this.visited_pages, seeds[i]));
             threads[i].setName(Integer.toString(i));

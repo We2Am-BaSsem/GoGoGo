@@ -17,64 +17,74 @@ import com.mongodb.internal.connection.Time;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
-
+import java.util.ArrayList;
 import java.util.*;
 import com.mongodb.internal.connection.Time;
 
 public class crawler implements Runnable {
+
     private String start_url;
     public HashSet<String> visited_pages;
-    public HashSet<String> toVisit_pages = new HashSet<String>();
-
+    public static HashSet<String> toVisit_pages = new HashSet<String>();
+    public  static ArrayList<String> blocked_robots = new ArrayList<String>();
     static MongoDBManager dbManager = new MongoDBManager();
 
+    /**
+     * @brief Constructor  of crawler
+     * param Visitied_pages
+     * param Start_url of each Thread
+     */
     public crawler(HashSet<String> visited_pages, String start_url) {
-        // System.out.println("started thread " + Thread.currentThread().getName());
         this.start_url = start_url;
-        // this.pages_to_visit = pages_to_visit;
         this.visited_pages = visited_pages;
-        // this.pages_to_visit.add(start_url);
         addTopagesToVisit(start_url);
     }
 
+    /**
+     * Synchronized Function to add to visited pages in MongoDB
+     *
+     * @param url needed to be put in visited_pages
+     */
     public void addToVisitedPages(String url) {
         synchronized (this.dbManager) {
             try {
                 dbManager.insertIntoVisited_pages(url);
                 this.visited_pages.add(url);
             } catch (Exception e) {
-                System.out.println("error");
+
             }
         }
     }
 
+    /**
+     * @brief Synchronized Function to add to to_be_vistied pages in MongoDB
+     *
+     * @param url needed to be put in to_be_vistied pages in MongoDB
+     */
     public void addTopagesToVisit(String url) {
-        if (!(this.toVisit_pages.contains(url) || this.visited_pages.contains(url))) {
 
             synchronized (this.dbManager) {
+                if (!(this.toVisit_pages.contains(url) || this.visited_pages.contains(url))) {
                 try {
                     int result = dbManager.insertIntobeVisited(url);
                     if (result == -1) {
-                        System.out.println(
-                                "thread #" + Thread.currentThread().getName() + "fail to insert be visited" + url);
                         this.toVisit_pages.add(url);
                     } else {
-                        System.out.println("thread #" + Thread.currentThread().getName()
-                                + "suucessfully to insert be visited" + url);
                         this.toVisit_pages.add(url);
-                    }
-                    // if(!this.pages_to_visit.contains(url)) {
-                    // this.pages_to_visit.add(url);
-                    // this.pages_to_visit.notifyAll();
+                    };
                     this.dbManager.notifyAll();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-
         }
     }
 
+    /**
+     * @brief Synchronized Function to get next_link(url) from MongoDB then remove it from MongoDB
+     *
+     *  no needed
+     */
     public String pollFrompagesToVisit() {
         synchronized (this.dbManager) {
             try {
@@ -93,91 +103,91 @@ public class crawler implements Runnable {
         }
     }
 
+    /**
+     * @brief Synchronized Function to get getsize_visited_pages
+     *
+     *  no param needed
+     */
     public int getsize_visited_pages() {
         synchronized (this.visited_pages) {
             return this.visited_pages.size();
         }
     }
 
+    /**
+     * @brief Synchronized Function to get check if this url in visited pages hashset
+     *
+     *  @param  url to be checked
+     */
     public boolean checkVisitedPages(String url) {
         synchronized (this.visited_pages) {
             return this.visited_pages.contains(url);
         }
     }
 
+    /**
+     * @brief Synchronized Function to get check if this if this url in ToVisit Pages hashset
+     *
+     *  @param  url to be checked
+     */
     public boolean checkToVisitPages(String url) {
         synchronized (this.toVisit_pages) {
             return this.toVisit_pages.contains(url);
         }
     }
 
+    /**
+     * @brief Run Function Doing Crawler work
+     *
+     */
     public void run() {
 
-        while (getsize_visited_pages() < 15) {
-            // System.out.println("num = "+Thread.activeCount());
-            // System.out.println(getsize_visited_pages());
-            // get first element of pages_to_visit
-            // String next_url = pages_to_visit.poll();
+        while (getsize_visited_pages() < 1000) {
+
             String next_url = pollFrompagesToVisit();
-            // System.out.println("e1: " + next_url);
+
             try {
-                // get content from request function
                 Document doc = request(next_url);
                 if (doc != null) {
-                    // loopover the ancher tags of pages
-                    Elements elements = doc.select("a");
+                    Elements elements = doc.select("a[href]");
                     for (Element e : elements) {
                         String href = e.attr("href");
                         href = normalize(href, next_url);
                         try {
-                            if (href != null &&  !checkToVisitPages(href) && !checkVisitedPages(href) && robotSafe(href)) {
-                                // System.out.println("e2 " + href);
+                            if (href != null && !checkToVisitPages(href) &&  !checkVisitedPages(href)) {  //&& robotSafe(href)
                                 addTopagesToVisit(href);
-
                             }
                         } catch (Exception e2) {
-                            System.out.println(e2.getMessage());
                         }
                     }
                 }
 
             } catch (Exception ex) {
-                // System.out.println("can't access the URL");
+
             }
         }
-        // System.out.println("Finished, "+Thread.currentThread().getId()+" number of
-        // pages visited = " + visited_pages.size());
+
     }
 
-    private static String writeToFile(String url, String text) {
-        try {
-            url = set_up_url(url);
-            PrintWriter out = new PrintWriter("docs\\" + url + ".txt");
-            out.write(text);
-            out.close();
-            return url;
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            return null;
-        }
-    }
 
+    /**
+     * @brief Run check get Document in webpage and add crawler pages into MongoDataBase
+     *
+     * @param url
+     */
     private Document request(String url) {
-
         try {
-            // Connection con =
-            // Jsoup.connect(url).userAgent(userAgent).referrer(referrer).maxBodySize(0);
-            // Document doc = con.get();
-
+            if(robotSafe(url) == false) {return null;}
             Connection con = Jsoup.connect(url);
             Document doc = con
                     .userAgent(
                             "Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+                    .referrer("http://www.google.com")
                     .get();
             if (con.response().statusCode() == 200) {
-
                 String HTML_Document = doc.toString();
-                // System.out.println("#thread"+Thread.currentThread().getName()+" link :"+url);
+
+                // Get time of Insertion into DB
                 long start = System.currentTimeMillis();
                 String title = doc.title();
                 String description = doc.select("meta[name=description]").get(0).attr("content");
@@ -185,39 +195,36 @@ public class crawler implements Runnable {
                 long end = System.currentTimeMillis();
                 System.out.println("inserting time :" + (end - start) / 1000 + "s");
                 if (result == 0) {
-                    System.out.println(
-                            "Thread# " + Thread.currentThread().getName() + " Inserted <" + url + "> successfully");
-                    // addToVisitedPages(url);
+                    System.out.println("Thread# " + Thread.currentThread().getName() + " Inserted <" + url + "> successfully");
                     addToVisitedPages(url);
+                    return doc;
                 } else if (result == -1) {
                     System.out.println("Inserted <" + url + "> failed");
-                    addToVisitedPages(url);
+                    //addToVisitedPages(url);
+                    return null;
                 }
-                return doc;
+
             }
             return null;
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            //System.out.println(e.getMessage());
             return null;
         }
 
     }
 
-    private static String set_up_url(String url) {
-        int pos1 = url.indexOf('.');
-
-        url = url.substring(pos1, url.length() - 1);
-        url = url.replaceAll("[^a-zA-Z0-9]", "");
-        return url;
-    }
-
+    /**
+     * @brief Function Takes link and base and return Normalized links
+     *
+     * @param link
+     * @param base
+     */
     private String normalize(String link, String base) {
-
         try {
             URL u = new URL(base);
             if (link.startsWith("./")) {
-                link = link.substring(2, link.length());
-                link = u.getProtocol() + "://" + u.getAuthority() + stripFilename(u.getPath()) + link;
+                link = link.substring(2);
+                link = u.getProtocol() + "://" + u.getAuthority() + stripPath(u.getPath()) + link;
             } else if (link.indexOf('?') != -1)
                 link = link.substring(0, link.indexOf('?'));
             else if (link.indexOf('#') != -1)
@@ -227,34 +234,39 @@ public class crawler implements Runnable {
             }
             return link;
         } catch (Exception e) {
-            e.printStackTrace();
+           // e.printStackTrace();
             return null;
         }
 
     }
 
     // cleans up the URLs
-    private String stripFilename(String path) {
+    private String stripPath(String path) {
         int pos = path.lastIndexOf("/");
         return pos <= -1 ? path : path.substring(0, pos + 1);
     }
 
-    boolean robotSafe(String link) {
-        // final ArrayList<String> blocked_by_robot = new ArrayList<>();
-        // final ArrayList<String> visited_hosts = new ArrayList<>();
+    /**
+     * @brief Function Takes link  and Check if link is robotsafe or not
+     *
+     * @param link
+     */
+    boolean  robotSafe(String link) {
+
+        if (blocked_robots.contains(link)) return false;
+
         URL url = null;
         String strHost;
         try {
             url = new URL(link);
         } catch (Exception ex) {
-            System.out.println("here");
         }
         strHost = url.getHost();
 
         String strRobot = url.getProtocol() + "://" + strHost + "/robots.txt"; // https://www.google.com/robots.txt
-        // System.out.println(strRobot);
+
         URL urlRobot;
-        // visited_hosts.add(strHost);
+
         boolean found = false, blocked_found = false;
         String content = null;
         URLConnection connection = null;
@@ -281,22 +293,23 @@ public class crawler implements Runnable {
                     int start = line.indexOf(":") + 1;
                     int end = line.length();
                     robot_String = line.substring(start, end).trim();
-                    if (robot_String == "/") {
-                        System.out.println("blocked by robot\n");
+                    if(robot_String == "") {return true;}
+                    else if (robot_String == "/") {
+                        System.out.println("blocked by robot "+link + robot_String);
                         return false;
                     }
-                    if (robot_String.startsWith("/") && link.endsWith("/")) {
+                    else if (robot_String.startsWith("/") && link.endsWith("/")) {
                         robot_String = robot_String.substring(1);
                     } else {
                         robot_String = line.substring(start, end).trim();
                     }
 
                     if (link.contains(robot_String)) {
-                        System.out.println("blocked by robot\n");
+                        blocked_robots.add(link + robot_String);
+                        System.out.println("blocked by robot "+link + robot_String);
                         return false;
                     }
-                    // System.out.println(link + line.substring(start, end).trim());
-                    // blocked_by_robot.add(link + robot_String);
+
                 }
                 if (line.startsWith("User-agent")) {
                     break;
