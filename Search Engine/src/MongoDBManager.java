@@ -257,7 +257,10 @@ public class MongoDBManager {
 
     void insertIntoIndexer2(Hashtable<String, List<Document>> indexer) {
         MongoDatabase mongoDatabase = mongoClient.getDatabase("GoGoGo_Search");
-        MongoCollection collection = mongoDatabase.getCollection("Indexer");
+        MongoCollection collection = mongoDatabase.getCollection("Crawler");
+
+        Long documentsNumber = collection.countDocuments();
+        collection = mongoDatabase.getCollection("Indexer");
 
         try {
             Long start = System.currentTimeMillis();
@@ -270,7 +273,8 @@ public class MongoDBManager {
                         if (!collection.find((new Document()).append("key", key)).iterator().hasNext()) {
                             System.out.println(i++);
                             Document tempDoc = new Document("key", key);
-                            tempDoc.append("DF", indexer.get(key).size());
+                            double IDF = Math.log((1.0 * documentsNumber) / indexer.get(key).size());
+                            tempDoc.append("IDF", IDF);
                             tempDoc.append("URLS", indexer.get(key));
                             try {
                                 collection.insertOne(tempDoc);
