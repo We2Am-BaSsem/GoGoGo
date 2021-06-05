@@ -70,12 +70,11 @@ public class IndexerSchedular {
 
         // create the inverted file and store it in the indexer
         // writeToFile(indexer);
-         System.out.println("\n******************************\nindexing: " + docsKeyURLS.size()
-                 + " word\n******************************\n");
+        System.out.println("\n******************************\nindexing: " + docsKeyURLS.size()
+                + " word\n******************************\n");
         InsertIntoDB(dbManager);
 
         long end = System.currentTimeMillis();
-
 
         System.out.println("\n******************************\nindexing time: " + (end - start) / 1000
                 + "s\n******************************\n");
@@ -87,9 +86,15 @@ public class IndexerSchedular {
 
     private void InsertIntoDB(MongoDBManager dbManager) {
         try {
+            Long start = System.currentTimeMillis();
             dbManager = new MongoDBManager();
             dbManager.insertIntoIndexer2(this.docsKeyURLS);
             dbManager.CloseConnection();
+            long end = System.currentTimeMillis();
+            System.out.println("\n******************************\ninsertion time: " + (end - start) / 1000
+                    + "s\n******************************\n");
+            System.out.println("\n******************************\ninsertion time: " + (end - start) / 1000 / 60
+                    + "s\n******************************\n");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
