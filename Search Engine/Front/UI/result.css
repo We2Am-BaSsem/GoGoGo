@@ -10,7 +10,7 @@
 main {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: stretch;
   width: 100%;
   
@@ -27,7 +27,7 @@ input {
   border: solid 2px;
   border-width: 0 0 2px 0;
   border-color: #999999;
-  margin-bottom: 0.3vw;
+  margin: 2vw 2vw 2vw 0;
 }
 .Logo{
     margin: 1vw;
@@ -36,11 +36,50 @@ input {
 .ResultCol{
     display: flex;
     flex-direction: column;
-    flex-grow: 3;
+    flex: 50% 2 2;
 }
 .Stats{
-    flex-grow: 2;
+    flex: 50% 2 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
-.URL {
+.URL { 
     font-family: "Source Code Pro";
+    color: #569700;
+    font-weight: 600;
+    text-decoration: underline;
+    margin: 0.2vw 0;
+}
+
+a{
+    text-decoration: none;
+}
+
+.Title{
+    margin: 0.4vw 0;
+    font-size: 1.6vw;
+    color: #006b9d;
+    font-family: "Roboto";
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.Title:hover, .URL:hover{
+    filter: brightness(1.1) saturate(1.4);
+}
+
+
+
+.Desc{
+    margin: 0.2vw 0;
+    font-family: 'Comfortaa';
+    font-size: 0.9vw;
+    color: #777777;
+    font-weight: 500;
+}
+
+.aResult{
+    margin: 1vw;
 }
