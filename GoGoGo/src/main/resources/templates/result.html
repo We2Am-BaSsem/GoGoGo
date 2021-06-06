@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="Group_2_1.png" />
+    <link rel="stylesheet" href="result.css" />
+    <title>GoGoGo</title>
+</head>
+<body>
+<main>
+    <div class="Decor">
+        <a th:href="@{/}"><img class="Logo" src="Group_2_1.png" /></a>
+    </div>
+    <div class="ResultCol">
+        <input
+                type="text"
+                name="searchfield"
+                id="searchfield"
+                th:value="${keys}"
+                disabled
+        />
+            <div class="aResult" th:each="webSite : ${URLS}">
+                <a class="URL" th:href="${webSite.URL}" th:text="${webSite.URL}">
+                    <div class="URL" th:text="${webSite.URL}">
+                        Default
+                    </div>
+                    <div class="Title" th:text="${webSite.Title}">
+                        Default
+                    </div>
+                </a>
+                <a  th:href="${webSite.URL}">
+                    <div class="Title" th:text="${webSite.Title}">
+                        Default
+                    </div>
+                </a>
+                <div class="Desc" th:text="${webSite.Description}">Default</div>
+            </div>
+
+
+    </div>
+    <div class="Stats" th:text="${size}">Default</div>
+</main>
+</body>
+<script></script>
+</html>
