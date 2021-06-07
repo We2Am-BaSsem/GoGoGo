@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import com.GoGoGoSearch.GoGoGo.DBService.DBService.*;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,22 +28,39 @@ public class webController {
         this.linkRepo = linkRepo;
     }
 
-    @GetMapping("/")
     public String viewHomeScreen(Model model) {
         return "Index";
     }
 
+    @GetMapping(path="/getData/{word}")
+    public String getSuggest(@PathVariable("word") String word){
+        return "hello from server";//return the data as json
+    }
     @GetMapping("/search")
     public String viewResultScreen(@ModelAttribute("searchSentence") String searchSentence, @ModelAttribute("mode") String mode, Model model) {
-        MyJSONdoc results = getLinks(searchSentence,mode);
+        MyJSONdoc results = getLinks(searchSentence, mode);
 
-        model.addAttribute("keys",results.getKey());
-        model.addAttribute("size",results.getSize());
-        model.addAttribute("URLS",results.getURLS());
+        if (results == null) {
+//            model.addAttribute("keys","0");
+//            model.addAttribute("size","0");
+//            model.addAttribute("URLS","0");
 
+            return "empty";
+        } else {
+            String s = "";
+            for (int i = 0; i < results.getKey().size(); i++) {
+                s += results.getKey().get(i);
+
+                s += " ";
+            }
+            model.addAttribute("keys", s);
+            model.addAttribute("size", results.getSize());
+            model.addAttribute("URLS", results.getURLS());
+
+        }
         return "result";
-    }
 
+    }
 
 
     public MyJSONdoc getLinks(String searchSentence, String mode) {
@@ -55,7 +73,9 @@ public class webController {
         ArrayList<Document> URLS = new ArrayList<>();   //this list should store the list of returned documents from the database,
         // each document contains the URL, Title, Description
 
-
+        if (searchWords.length == 0) {
+            return null;
+        }
         //   according to the mode we perform the proper search query query
         if (mode.equals("Or")) {
             //key1-> url1 url5 url3
@@ -64,11 +84,19 @@ public class webController {
 
             ArrayList<Document> URLSOrMode = new ArrayList<>();
 
+
             for (String word : searchWords) {
-                URLSOrMode = linkRepo.findByKey(word).get(0).getURLS();
-                URLS.addAll(URLSOrMode);
-                keys.add(word);
+                try {
+                    URLSOrMode = linkRepo.findByKey(word).get(0).getURLS();
+                    URLS.addAll(URLSOrMode);
+                    keys.add(word);
+                } catch (Exception e) {
+                    keys.add(word);
+                }
+
             }
+
+
         } else if (mode.equals("And")) {
             //key1-> url1 url5 url3
             //key2-> url5 url3 url7
@@ -79,7 +107,12 @@ public class webController {
             for (String word : searchWords) {
                 keys.add(word);
 
-                ArrayList<Document> queryResult = linkRepo.findByKey(word).get(0).getURLS();
+                ArrayList<Document> queryResult;
+                try {
+                    queryResult = linkRepo.findByKey(word).get(0).getURLS();
+                } catch (Exception e) {
+                    return null;
+                }
 
                 for (int i = 0; i < queryResult.size(); i++) {
                     if (URLSAndMode.containsKey(queryResult.get(i))) {
@@ -94,6 +127,9 @@ public class webController {
 
         MyJSONdoc results = new MyJSONdoc(keys, URLS, URLS.size());
 
+        if (results.getSize() == 0) {
+            return null;
+        }
         return results;
     }
 

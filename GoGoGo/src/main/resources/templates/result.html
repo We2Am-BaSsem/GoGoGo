@@ -21,6 +21,9 @@
                 th:value="${keys}"
                 disabled
         />
+
+        <div class="Title">Number Of Results Found  = <span th:text="${size}"></span> </div>
+        <hr>
             <div class="aResult" th:each="webSite : ${URLS}">
                 <a class="URL" th:href="${webSite.URL}" th:text="${webSite.URL}">
                     <div class="URL" th:text="${webSite.URL}">
@@ -40,8 +43,12 @@
 
 
     </div>
-    <div class="Stats" th:text="${size}">Default</div>
+    <div class="Stats" id="size" th:text="${size}">Default sdfldsknflsdknfl</div>
 </main>
 </body>
-<script></script>
+<script>
+
+</script>
+
+
 </html>
