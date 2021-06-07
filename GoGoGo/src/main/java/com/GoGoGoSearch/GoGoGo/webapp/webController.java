@@ -15,36 +15,30 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-
 @Controller
 public class webController {
 
 
     @Autowired
-    private final LinkRepo linkRepo;
+    private final LinkRepo linkRepo; // defining the linkRepo which contains the database operations
 
+    // constructor
     public webController(LinkRepo linkRepo) {
         this.linkRepo = linkRepo;
     }
 
+    // view home page
     public String viewHomeScreen(Model model) {
         return "Index";
-    }
+    } // Index-> is the name of the html file
 
-    @GetMapping(path="/getData/{word}")
-    public String getSuggest(@PathVariable("word") String word){
-        return "hello from server";//return the data as json
-    }
+
+    // show the results in the result page, takes the search sentence and the search mode
     @GetMapping("/search")
     public String viewResultScreen(@ModelAttribute("searchSentence") String searchSentence, @ModelAttribute("mode") String mode, Model model) {
         MyJSONdoc results = getLinks(searchSentence, mode);
 
         if (results == null) {
-//            model.addAttribute("keys","0");
-//            model.addAttribute("size","0");
-//            model.addAttribute("URLS","0");
-
             return "empty";
         } else {
             String s = "";
@@ -62,7 +56,6 @@ public class webController {
 
     }
 
-
     public MyJSONdoc getLinks(String searchSentence, String mode) {
 
         //  here we split the sentence into words that are used for search process
@@ -76,15 +69,12 @@ public class webController {
         if (searchWords.length == 0) {
             return null;
         }
-        //   according to the mode we perform the proper search query query
+        //   according to the mode we perform the proper search query
+        //key1-> url1 url5 url3
+        //key2-> url5 url3 url7
+        //result-> url1 url5 url3 url7
         if (mode.equals("Or")) {
-            //key1-> url1 url5 url3
-            //key2-> url5 url3 url7
-            //result-> url1 url5 url3 url7
-
             ArrayList<Document> URLSOrMode = new ArrayList<>();
-
-
             for (String word : searchWords) {
                 try {
                     URLSOrMode = linkRepo.findByKey(word).get(0).getURLS();
@@ -93,33 +83,27 @@ public class webController {
                 } catch (Exception e) {
                     keys.add(word);
                 }
-
             }
-
-
-        } else if (mode.equals("And")) {
-            //key1-> url1 url5 url3
-            //key2-> url5 url3 url7
-            //result-> url5 url3 url7
-
+        }
+        //key1-> url1 url5 url3
+        //key2-> url5 url3 url7
+        //result-> url5 url3 url7
+        else if (mode.equals("And")) {
             HashMap<Document, Long> URLSAndMode = new HashMap<>();
-
             for (String word : searchWords) {
                 keys.add(word);
-
                 ArrayList<Document> queryResult;
                 try {
                     queryResult = linkRepo.findByKey(word).get(0).getURLS();
                 } catch (Exception e) {
                     return null;
                 }
-
-                for (int i = 0; i < queryResult.size(); i++) {
-                    if (URLSAndMode.containsKey(queryResult.get(i))) {
-                        URLSAndMode.put(queryResult.get(i), URLSAndMode.get(queryResult.get(i)) + 1);
-                        URLS.add(queryResult.get(i));
+                for (Document document : queryResult) {
+                    if (URLSAndMode.containsKey(document)) {
+                        URLSAndMode.put(document, URLSAndMode.get(document) + 1);
+                        URLS.add(document);
                     } else {
-                        URLSAndMode.put(queryResult.get(i), 1L);
+                        URLSAndMode.put(document, 1L);
                     }
                 }
             }

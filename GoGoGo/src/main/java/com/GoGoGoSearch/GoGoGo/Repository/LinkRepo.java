@@ -10,4 +10,7 @@ public interface LinkRepo extends MongoRepository <Link,Integer> {
 
     @Query("{'key':?0}")
     List<Link> findByKey(String key);
+
+
+
 }

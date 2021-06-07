@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -8,22 +9,17 @@
     <link rel="stylesheet" href="result.css" />
     <title>GoGoGo</title>
 </head>
-<body>
-<main>
-    <div class="Decor">
-        <a th:href="@{/}"><img class="Logo" src="Group_2_1.png" /></a>
-    </div>
-    <div class="ResultCol">
-        <input
-                type="text"
-                name="searchfield"
-                id="searchfield"
-                th:value="${keys}"
-                disabled
-        />
 
-        <div class="Title">Number Of Results Found  = <span th:text="${size}"></span> </div>
-        <hr>
+<body>
+    <main>
+        <div class="Decor">
+            <a th:href="@{/}"><img class="Logo" src="Group_2_1.png" /></a>
+        </div>
+        <div class="ResultCol">
+            <input type="text" name="searchfield" id="searchfield" th:value="${keys}" disabled />
+
+            <div class="Title">Number Of Results Found = <span th:text="${size}"></span> </div>
+            <hr>
             <div class="aResult" th:each="webSite : ${URLS}">
                 <a class="URL" th:href="${webSite.URL}" th:text="${webSite.URL}">
                     <div class="URL" th:text="${webSite.URL}">
@@ -33,7 +29,7 @@
                         Default
                     </div>
                 </a>
-                <a  th:href="${webSite.URL}">
+                <a th:href="${webSite.URL}">
                     <div class="Title" th:text="${webSite.Title}">
                         Default
                     </div>
@@ -42,12 +38,13 @@
             </div>
 
 
-    </div>
-    <div class="Stats" id="size" th:text="${size}">Default sdfldsknflsdknfl</div>
-</main>
+        </div>
+
+        <div class="Stats" id="size"></div>
+        <!-- <div class="Stats" id="size" th:text="${size}">Default sdfldsknflsdknfl</div> -->
+    </main>
 </body>
 <script>
-
 </script>
 
 

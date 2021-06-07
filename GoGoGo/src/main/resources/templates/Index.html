@@ -18,7 +18,8 @@
             <img class="RightBrac" src="Group_7_bb.png" />
         </div>
         <form class="Form" th:action="@{/search}" method="GET">
-            <input type="text" th:name="searchSentence" id="searchfield" oninput="changeHandler()" />
+            <input type="text" th:name="searchSentence" id="searchfield" />
+
             <label id="searchnotes" for="searchfield"></label>
             <!--<input type="text" name="" id="speechToText" placeholder="Speak Something" onfocus="record()">-->
             <div class="LowBar">
@@ -57,28 +58,6 @@
 <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Calculus.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/nerdamer@latest/Solve.js"></script>
 <script>
-    function changeHandler() {
-        console.log("herye");
-        var ajaxReq = new XMLHttpRequest();
-        var link = '/getData/' + document.getElementById('searchfield').value;
-        console.log(link);
-        ajaxReq.open('POST', link, [true]);
-        ajaxReq.send();
-        ajaxReq.onprogress = function(event) {
-            if (event.lengthComputable) {
-                // var word = event.split(9, event.length);
-                console.log(event);
-            } else {
-                //console.log("size max is here");
-            }
-        }
-    }
-
-    <!--   document.getElementById("searchfield").addEventListener("input", function() {-->
-    <!--  if( isEmpty(this.value.trim()) ) {-->
-    <!--    console.log( "NAME is invalid (Empty)" ;)-->
-    <!--  }-->
-    <!--});-->
     function record() {
         var recognition = new webkitSpeechRecognition();
         recognition.lang = "en-GB";
@@ -155,6 +134,93 @@
             .solve(arr[0], arr[1])
             .toString();
     }
+</script>
+
+<!-- related to the auto-suggestions -->
+<script>
+    // getting all required elements
+    const searchWrapper = document.querySelector(".search-input");
+    const inputBox = searchWrapper.querySelector("input");
+    const suggBox = searchWrapper.querySelector(".autocom-box");
+    const icon = searchWrapper.querySelector(".icon");
+    let linkTag = searchWrapper.querySelector("a");
+    let webLink;
+
+    // if user press any key and release
+    inputBox.onkeyup = (e) => {
+        let userData = e.target.value; //user enetered data
+        let emptyArray = [];
+        if (userData) {
+            emptyArray = suggestions.filter((data) => {
+                //filtering array value and user characters to lowercase and return only those words which are start with user enetered chars
+                return data.toLocaleLowerCase().startsWith(userData.toLocaleLowerCase());
+            });
+            emptyArray = emptyArray.map((data) => {
+                // passing return data inside li tag
+                return data = '<li>' + data + '</li>';
+            });
+            searchWrapper.classList.add("active"); //show autocomplete box
+            showSuggestions(emptyArray);
+            let allList = suggBox.querySelectorAll("li");
+            for (let i = 0; i < allList.length; i++) {
+                //adding onclick attribute in all li tag
+                allList[i].setAttribute("onclick", "select(this)");
+            }
+        } else {
+            searchWrapper.classList.remove("active"); //hide autocomplete box
+        }
+    }
+
+    function select(element) {
+        let selectData = element.textContent;
+        inputBox.value = selectData;
+        icon.onclick = () => {
+            webLink = "https://www.google.com/search?q=" + selectData;
+            linkTag.setAttribute("href", webLink);
+            linkTag.click();
+        }
+        searchWrapper.classList.remove("active");
+    }
+
+    function showSuggestions(list) {
+        let listData;
+        if (!list.length) {
+            userValue = inputBox.value;
+            listData = '<li>' + userValue + '</li>';
+        } else {
+            listData = list.join('');
+        }
+        suggBox.innerHTML = listData;
+    }
+
+    let suggestions = [
+        "Channel",
+        "CodingLab",
+        "CodingNepal",
+        "YouTube",
+        "YouTuber",
+        "YouTube Channel",
+        "Blogger",
+        "Bollywood",
+        "Vlogger",
+        "Vechiles",
+        "Facebook",
+        "Freelancer",
+        "Facebook Page",
+        "Designer",
+        "Developer",
+        "Web Designer",
+        "Web Developer",
+        "Login Form in HTML & CSS",
+        "How to learn HTML & CSS",
+        "How to learn JavaScript",
+        "How to became Freelancer",
+        "How to became Web Designer",
+        "How to start Gaming Channel",
+        "How to start YouTube Channel",
+        "What does HTML stands for?",
+        "What does CSS stands for?",
+    ];
 </script>
 
 </html>
