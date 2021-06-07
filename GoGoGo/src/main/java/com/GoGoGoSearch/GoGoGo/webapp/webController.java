@@ -1,6 +1,7 @@
 package com.GoGoGoSearch.GoGoGo.webapp;
 
 
+import ca.rmen.porterstemmer.PorterStemmer;
 import com.GoGoGoSearch.GoGoGo.Repository.LinkRepo;
 import com.GoGoGoSearch.GoGoGo.document.MyJSONdoc;
 import org.bson.Document;
@@ -77,7 +78,9 @@ public class webController {
             ArrayList<Document> URLSOrMode = new ArrayList<>();
             for (String word : searchWords) {
                 try {
-                    URLSOrMode = linkRepo.findByKey(word).get(0).getURLS();
+                    PorterStemmer ps = new PorterStemmer();
+                    String searchKey = ps.stemWord(word);
+                    URLSOrMode = linkRepo.findByKey(searchKey).get(0).getURLS();
                     URLS.addAll(URLSOrMode);
                     keys.add(word);
                 } catch (Exception e) {
@@ -94,7 +97,9 @@ public class webController {
                 keys.add(word);
                 ArrayList<Document> queryResult;
                 try {
-                    queryResult = linkRepo.findByKey(word).get(0).getURLS();
+                    PorterStemmer ps = new PorterStemmer();
+                    String searchKey = ps.stemWord(word);
+                    queryResult = linkRepo.findByKey(searchKey).get(0).getURLS();
                 } catch (Exception e) {
                     return null;
                 }
