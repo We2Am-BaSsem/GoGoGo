@@ -111,7 +111,7 @@
         if (eq) {
             calc();
         } else {
-            if (document.getElementById("searchfield").value.split(" ").length > 1)
+            if (document.getElementById("searchfield").value.split(" ").length >= 1)
                 document.querySelector(".Form").submit();
             else
                 document.getElementById("searchnotes").innerHTML =
