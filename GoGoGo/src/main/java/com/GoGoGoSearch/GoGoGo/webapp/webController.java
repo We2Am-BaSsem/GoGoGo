@@ -2,8 +2,11 @@ package com.GoGoGoSearch.GoGoGo.webapp;
 
 
 import ca.rmen.porterstemmer.PorterStemmer;
+import com.GoGoGoSearch.GoGoGo.DBService.suggestionController;
 import com.GoGoGoSearch.GoGoGo.Repository.LinkRepo;
+import com.GoGoGoSearch.GoGoGo.Repository.SearchSugRepo;
 import com.GoGoGoSearch.GoGoGo.document.MyJSONdoc;
+import com.GoGoGoSearch.GoGoGo.document.searchSuggWords;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,20 +19,32 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 @Controller
 public class webController {
 
 
     @Autowired
     private final LinkRepo linkRepo; // defining the linkRepo which contains the database operations
+    @Autowired
+    private final SearchSugRepo searchSugRepo;
 
     // constructor
-    public webController(LinkRepo linkRepo) {
+    public webController(LinkRepo linkRepo, SearchSugRepo searchSugRepo) {
         this.linkRepo = linkRepo;
+        this.searchSugRepo = searchSugRepo;
     }
 
     // view home page
+    @GetMapping("/")
     public String viewHomeScreen(Model model) {
+        List<searchSuggWords> mySug = searchSugRepo.findAll();
+        ArrayList<String> mySugString = new ArrayList<>();
+        for (int i = 0; i < mySug.size(); i++) {
+            mySugString.add(mySug.get(i).getSearchSentence());
+        }
+        model.addAttribute("suggestions",mySugString);
         return "Index";
     } // Index-> is the name of the html file
 
@@ -118,6 +133,14 @@ public class webController {
 
         if (results.getSize() == 0) {
             return null;
+        }
+
+        try {
+            searchSuggWords searchSuggWords = new searchSuggWords(searchSentence);
+            suggestionController suggestionController =new suggestionController(searchSugRepo);
+            suggestionController.addSentence(searchSuggWords);
+        } catch (Exception e){
+
         }
         return results;
     }
