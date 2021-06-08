@@ -18,7 +18,7 @@
             <img class="RightBrac" src="Group_7_bb.png" />
         </div>
         <form class="Form" th:action="@{/search}" method="GET">
-            <input type="text" th:name="searchSentence" id="searchfield" />
+            <input type="text" th:name="searchSentence" id="searchfield" class="input"/>
             <div class="autocom-box">
 
             </div>
@@ -143,7 +143,7 @@
 <script>
     // getting all required elements
     const searchWrapper = document.querySelector(".search-input");
-    const inputBox = searchWrapper.querySelector("input");
+    const inputBox = searchWrapper.querySelector(".input");
     const suggBox = searchWrapper.querySelector(".autocom-box");
     const icon = searchWrapper.querySelector(".icon");
     let linkTag = searchWrapper.querySelector("a");
