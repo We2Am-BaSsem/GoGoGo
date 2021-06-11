@@ -6,7 +6,7 @@ Here, we introduce our search engine, GoGoGo!
 
 - User Interface
 ![image](https://user-images.githubusercontent.com/56788883/121092423-d2095100-c7eb-11eb-8949-d76a6525dfdc.png)
-- Solving Equations
+- Solving Equations and Systems
 ![image](https://user-images.githubusercontent.com/56788883/121093150-ea2da000-c7ec-11eb-9188-6da72dbdb63f.png)
 ![image](https://user-images.githubusercontent.com/56788883/121093207-fade1600-c7ec-11eb-9a30-17bb2ccc90b1.png)
 - Search Results
