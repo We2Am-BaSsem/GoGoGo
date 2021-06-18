@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 
 <head>
     <meta charset="UTF-8">
@@ -34,7 +34,7 @@
 
 <body>
     <div class="mainres">
-        <img class="photo" src="./sad.png" alt="no result found">
+        <a th:href="@{/}"><img class="photo" src="./sad.png" alt="no result found"></a>
         <h1 class="result"> No Results Found !</h1>
     </div>
 </body>
