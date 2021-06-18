@@ -44,7 +44,7 @@ public class webController {
         for (int i = 0; i < mySug.size(); i++) {
             mySugString.add(mySug.get(i).getSearchSentence());
         }
-        model.addAttribute("suggestions",mySugString);
+        model.addAttribute("suggestions", mySugString);
         return "Index";
     } // Index-> is the name of the html file
 
@@ -60,8 +60,8 @@ public class webController {
             String s = "";
             for (int i = 0; i < results.getKey().size(); i++) {
                 s += results.getKey().get(i);
-
-                s += " ";
+                if (i != results.getKey().size() - 1)
+                    s += " ";
             }
             model.addAttribute("keys", s);
             model.addAttribute("size", results.getSize());
@@ -137,9 +137,9 @@ public class webController {
 
         try {
             searchSuggWords searchSuggWords = new searchSuggWords(searchSentence);
-            suggestionController suggestionController =new suggestionController(searchSugRepo);
+            suggestionController suggestionController = new suggestionController(searchSugRepo);
             suggestionController.addSentence(searchSuggWords);
-        } catch (Exception e){
+        } catch (Exception e) {
 
         }
         return results;

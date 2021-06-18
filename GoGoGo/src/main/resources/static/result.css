@@ -31,6 +31,8 @@ input {
   border: solid 2px;
   border-width: 0 0 2px 0;
   border-color: #999999;
+  background-color: #000000;
+  color: #999999;
   margin: 2vw 2vw 2vw 0;
 }
 .Logo{
@@ -86,4 +88,54 @@ a{
 
 .aResult{
     margin: 1vw;
+}
+
+
+.Form {
+  display: flex;
+  flex-direction: column;
+  width: 40vw;
+  align-items: flex-end;
+  margin: 0vw 0vw 0vw 2vw;
+}
+
+label{
+    color: #6eb315;
+    font-family: 'Source Code Pro';
+    align-self: flex-start;
+    font-weight: 600;
+    margin: 0 0 0.5vw 0.5vw;
+}
+.Options {
+  display: flex;
+  flex-direction: row;
+  font-size: 2vw;
+  color: #bbbbbb;
+  font-weight: 600;
+}
+.icon {
+  height: 2vw;
+  margin: 0.5vw;
+  filter: saturate(0);
+  cursor: pointer;
+}
+.icon img {
+  height: 2vw;
+}
+.icon:hover {
+  filter: brightness(0.9) saturate(1.5);
+}
+.icon[checked] {
+  filter: saturate(1);
+}
+.icon:focus:not(#DeleteIcon, #EquationIcon) {
+  filter: saturate(1);
+}
+button {
+  background: none;
+  border: none;
+}
+.LowBar {
+  display: flex;
+  flex-direction: row;
 }

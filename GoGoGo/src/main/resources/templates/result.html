@@ -15,9 +15,34 @@
         <div class="Decor">
             <a th:href="@{/}"><img class="Logo" src="Group_2_1.png" /></a>
         </div>
-        <div class="ResultCol">
-            <input type="text" name="searchfield" id="searchfield" th:value="${keys}" disabled />
-
+        <form class="Form" th:action="@{/search}" method="GET">
+            <input type="text" th:name="searchSentence" id="searchfield" th:value="${keys}" />
+            <div class="LowBar">
+                <div class="Options">
+                    <button type="button" class="icon" onfocus="record()">
+                        <img src="microphone.png" alt="" />
+                    </button> |
+                    <input type="radio" name="mode" id="modeAnd" style="display: none" value="And" />
+                    <label for="modeAnd">
+                        <button type="button" class="icon" id="AndIcon" onclick="And()">
+                            <img src="img_476874_30302.png" alt="" />
+                        </button>
+                    </label>
+                    <input type="radio" name="mode" id="modeOr" style="display: none" value="Or" />
+                    <label for="modeOr">
+                        <button type="button" class="icon" id="OrIcon" onclick="Or()">
+                            <img src="881194-200.png" alt="" />
+                        </button>
+                    </label> |
+                    <button type="button" class="icon" id="EquationIcon" onclick="Equation()">
+                        <img src="Eq.png" alt="" />
+                    </button> |
+                    <button type="button" class="icon" id="DeleteIcon" onclick="document.getElementById('searchfield').value = '';">
+                        <img src="delete.png" alt="" />
+                    </button>
+                </div>
+            </div>
+            <div class="ResultCol">
             <div class="Title">Number Of Results Found = <span th:text="${size}"></span> </div>
             <hr>
             <div class="aResult" th:each="webSite : ${URLS}">
@@ -36,16 +61,88 @@
                 </a>
                 <div class="Desc" th:text="${webSite.Description}">Default</div>
             </div>
-
-
         </div>
-
+        </form>
         <div class="Stats" id="size"></div>
         <!-- <div class="Stats" id="size" th:text="${size}">Default sdfldsknflsdknfl</div> -->
     </main>
 </body>
 <script>
+    function record() {
+        var recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-GB";
+
+        recognition.onresult = function(event) {
+            document.getElementById("searchfield").value +=
+                event.results[0][0].transcript + " ";
+        };
+        recognition.start();
+    }
+    var eq = true;
+    Equation();
+    And();
+
+    function And() {
+        document.querySelector("#modeAnd").setAttribute("checked", true);
+        document.querySelector("#modeOr").removeAttribute("checked");
+        document.querySelector("#AndIcon").setAttribute("checked", true);
+        document.querySelector("#OrIcon").removeAttribute("checked");
+    }
+
+    function Or() {
+        document.querySelector("#modeOr").setAttribute("checked", true);
+        document.querySelector("#modeAnd").removeAttribute("checked");
+        document.querySelector("#OrIcon").setAttribute("checked", true);
+        document.querySelector("#AndIcon").removeAttribute("checked");
+    }
+
+    function Equation() {
+        eq = !eq;
+        if (eq) {
+            document
+                .getElementById("searchfield")
+                .setAttribute(
+                    "placeholder",
+                    "Enter equation and the variable to solve for or a system of equations"
+                );
+            document.getElementById("searchnotes").innerHTML =
+                "E.g.: 'x^2-8x+1, x' or '3*x^2/y=2, z*x*y-1=35, 5*z^2+7=52'";
+            document.querySelector("#EquationIcon").setAttribute("checked", true);
+        } else {
+            document
+                .getElementById("searchfield")
+                .setAttribute("placeholder", "Enter Keyword");
+            document.getElementById("searchnotes").innerHTML = "";
+            document.querySelector("#EquationIcon").removeAttribute("checked");
+        }
+    }
+
+    function SubmitOrCalc() {
+        if (eq) {
+            calc();
+        } else {
+            if (document.getElementById("searchfield").value.split(" ").length > 0)
+                document.querySelector(".Form").submit();
+            else
+                document.getElementById("searchnotes").innerHTML =
+                "Insufficient Arguments";
+        }
+    }
+
+    function calc() {
+        var str = document.getElementById("searchfield").value;
+        var arr = str.split(", ");
+        if (arr.length < 2)
+            document.getElementById("searchnotes").innerHTML =
+            "Insufficient Arguments";
+        if (arr.length > 2 || arr[1].length > 1)
+            document.getElementById("searchnotes").innerHTML = nerdamer
+            .solveEquations(arr)
+            .toString();
+        else
+            document.getElementById("searchnotes").innerHTML = nerdamer
+            .solve(arr[0], arr[1])
+            .toString();
+    }
 </script>
-
-
 </html>
