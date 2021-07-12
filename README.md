@@ -6,10 +6,10 @@ We are the engine that pushes you to go ahead ⏩⏩⏩
 
 Here, we introduce our search engine, GoGoGo!
 - Made with Spring framework.
-- Consists of two main modules for the search engine which are the crawler and the indixer.
-- It supports search by voice to those who needs. 🎙🎤
+- Consists of two main modules for the search engine which are the crawler and the indexer.
+- It supports search by voice to those who need it. 🎙🎤
 - It supports searching for the exact sentence or some words in it. 👀
-- Moreover, it supports solving equations and systems of eguations. 🧠🖩
+- Moreover, it supports solving equations and systems of equations. 🧠🖩
 ---
 # You Go We Search 🔎
 
