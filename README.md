@@ -1,5 +1,5 @@
 # GoGoGo
-we are the engine that pushes you to go ahead.⏩⏩⏩
+We are the engine that pushes you to go ahead.⏩⏩⏩
 
 Here, we introduce our search engine, GoGoGo!
 - It supports search by voice to those who needs. 🎙🎤
@@ -17,3 +17,4 @@ Here, we introduce our search engine, GoGoGo!
 ![image](https://user-images.githubusercontent.com/56788883/121093039-c79b8700-c7ec-11eb-9d92-ca561bc530ce.png)
 
 You Go We Search.
+Made with Spring framework, consists of two main modules for the search engine which are the crawler and the indixer.
